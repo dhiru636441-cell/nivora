@@ -1,0 +1,6 @@
+{
+  "name": "Nivora Resort & Hotel Intelligence",
+  "description": "Comprehensive hotel management system featuring distinct Customer, Staff, and Front Desk portals, real Google authentication, reservations, and room operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
