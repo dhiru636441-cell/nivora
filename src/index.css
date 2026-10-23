@@ -1,32 +1,60 @@
 @import "tailwindcss";
 
+@theme {
+  --color-forest: #12382D;
+  --color-forest-dark: #0A221B;
+  --color-forest-light: #1A4D3E;
+  --color-ivory: #F7F3EA;
+  --color-ivory-light: #FCFAF6;
+  --color-ivory-dark: #EDE5D5;
+  --color-gold: #C7A36A;
+  --color-gold-light: #D9BB8A;
+  --color-gold-dark: #A6844E;
+  --color-charcoal: #242722;
+  --color-charcoal-light: #343831;
+  --color-charcoal-dark: #161814;
+  --color-sage: #A9B8A4;
+  --color-sage-light: #C4D1BF;
+  --color-sage-dark: #8A9A85;
+}
+
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-serif: 'Playfair Display', Georgia, serif;
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
   }
 
   body {
     font-family: var(--font-sans);
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  h1, h2, h3, .font-serif {
+  h1, h2, h3, h4, .font-serif {
     font-family: var(--font-serif);
   }
 }
 
-/* Custom scrollbars */
+/* Luxury Resort custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(18, 56, 45, 0.05);
+}
+.dark ::-webkit-scrollbar-track {
+  background: rgba(18, 56, 45, 0.3);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.6);
+  background: rgba(199, 163, 106, 0.4);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.8);
+  background: rgba(199, 163, 106, 0.7);
 }
+

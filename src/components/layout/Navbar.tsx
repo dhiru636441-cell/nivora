@@ -1,9 +1,27 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../lib/auth-context';
-import { UserRole } from '../../lib/types';
+import { useTheme } from '../../lib/theme-context';
+import { useCart } from '../../lib/cart-context';
 import { AuthModal } from '../auth/AuthModal';
+import { StaffAuthModal } from '../auth/StaffAuthModal';
+import { FrontDeskAuthModal } from '../auth/FrontDeskAuthModal';
 import { ExcelImporterModal } from '../analytics/ExcelImporterModal';
-import { ShieldCheck, LogOut, User, KeyRound, Sparkles, AlertCircle, ChevronDown, Check, FileSpreadsheet } from 'lucide-react';
+import { db } from '../../lib/db';
+import {
+  LogOut,
+  User,
+  ChevronDown,
+  FileSpreadsheet,
+  Sun,
+  Moon,
+  ShoppingBag,
+  ShieldCheck,
+  Sparkles,
+  Building2,
+  Briefcase,
+  Palmtree,
+  ArrowRight,
+} from 'lucide-react';
 
 interface NavbarProps {
   currentPortal: 'customer' | 'staff' | 'front_desk';
@@ -20,88 +38,116 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTabChange,
   portalTabs = [],
 }) => {
-  const { user, role, signOut, signInGoogle, switchProvisionedRole, isSupabaseConnected } = useAuth();
+  const { user, role, signOut, isProfileComplete } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { itemCount, openCart } = useCart();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCustomerAuthModal, setShowCustomerAuthModal] = useState(false);
+  const [showStaffAuthModal, setShowStaffAuthModal] = useState(false);
+  const [showFrontDeskAuthModal, setShowFrontDeskAuthModal] = useState(false);
   const [showImporterModal, setShowImporterModal] = useState(false);
+
+  // Portal Branding Title
+  const getBrandTitle = () => {
+    if (currentPortal === 'staff') return 'NIVORA STAFF';
+    if (currentPortal === 'front_desk') return 'NIVORA FRONT DESK';
+    return 'NIVORA';
+  };
+
+  const getBrandSubtitle = () => {
+    if (currentPortal === 'staff') return 'Staff & Housekeeping Console';
+    if (currentPortal === 'front_desk') return 'Front Desk Intelligence';
+    return 'Resort & Residences';
+  };
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 text-slate-100">
+      <header className="sticky top-0 z-40 bg-[#12382D] text-[#F7F3EA] border-b border-[#C7A36A]/25 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-8 h-16">
+          <div className="flex items-center justify-between gap-6 h-18">
+            
             {/* Zone 1: Single Brand Wordmark */}
             <div className="flex items-center gap-4 shrink-0">
               <button
-                onClick={() => onNavigatePortal('customer')}
-                className="text-left group cursor-pointer focus:outline-none"
+                onClick={() => onNavigatePortal(currentPortal)}
+                className="text-left group cursor-pointer focus:outline-none flex items-center gap-3"
               >
-                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">
-                  Nivora
-                </span>
-                <span className="text-xs text-cyan-400 font-sans tracking-widest uppercase ml-2 hidden sm:inline">
-                  Resort & Residences
-                </span>
+                <div className="w-9 h-9 rounded-full border border-[#C7A36A] flex items-center justify-center bg-[#0D2820] text-[#C7A36A] text-xs font-serif font-semibold shadow-xs">
+                  {currentPortal === 'staff' ? 'S' : currentPortal === 'front_desk' ? 'FD' : 'N'}
+                </div>
+                <div>
+                  <span className="font-serif text-xl sm:text-2xl font-normal tracking-[0.2em] text-[#F7F3EA] group-hover:text-[#C7A36A] transition-colors">
+                    {getBrandTitle()}
+                  </span>
+                  <span className="block text-[9px] uppercase tracking-[0.25em] text-[#C7A36A] font-sans">
+                    {getBrandSubtitle()}
+                  </span>
+                </div>
               </button>
             </div>
 
-            {/* Zone 2: Navigation Links */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
-              {portalTabs.length > 0 ? (
-                portalTabs.map(tab => (
+            {/* Zone 2: Navigation Links (Clean typography, no garish capsules) */}
+            <nav className="hidden md:flex items-center gap-7 text-xs font-medium tracking-wider uppercase">
+              {portalTabs.length > 0 && (
+                portalTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => onTabChange?.(tab.id)}
-                    className={`text-sm tracking-wide transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
+                    className={`py-2 transition-all whitespace-nowrap shrink-0 border-b-2 cursor-pointer ${
                       activeTab === tab.id
-                        ? 'border-cyan-400 text-white font-semibold'
-                        : 'border-transparent text-slate-400 hover:text-slate-200'
+                        ? 'border-[#C7A36A] text-[#F7F3EA] font-semibold'
+                        : 'border-transparent text-[#A9B8A4] hover:text-[#F7F3EA]'
                     }`}
                   >
                     {tab.label}
                   </button>
                 ))
-              ) : (
-                <>
-                  <button
-                    onClick={() => onNavigatePortal('customer')}
-                    className={`text-sm transition-colors whitespace-nowrap shrink-0 ${
-                      currentPortal === 'customer' ? 'text-cyan-400 font-medium' : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    Guest Portal
-                  </button>
-                  <button
-                    onClick={() => onNavigatePortal('staff')}
-                    className={`text-sm transition-colors whitespace-nowrap shrink-0 ${
-                      currentPortal === 'staff' ? 'text-cyan-400 font-medium' : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    Staff Operations
-                  </button>
-                  <button
-                    onClick={() => onNavigatePortal('front_desk')}
-                    className={`text-sm transition-colors whitespace-nowrap shrink-0 ${
-                      currentPortal === 'front_desk' ? 'text-cyan-400 font-medium' : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    Front Desk Intelligence
-                  </button>
-                </>
               )}
             </nav>
 
-            {/* Zone 3: Primary Action */}
+            {/* Zone 3: Primary Action & User Profile */}
             <div className="flex items-center gap-3 shrink-0">
-              {/* Excel dataset importer shortcut for staff and front desk */}
-              {(role === 'staff' || role === 'front_desk') && (
+              
+              {/* Working Light / Dark Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle visual theme"
+                className="p-2 rounded-lg border border-[#C7A36A]/30 text-[#F7F3EA] hover:bg-white/10 transition-colors cursor-pointer"
+                title={theme === 'dark' ? 'Switch to Luxury Light Mode (Ivory)' : 'Switch to Dark Mode (Charcoal)'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-[#C7A36A]" />
+                ) : (
+                  <Moon className="w-4 h-4 text-[#C7A36A]" />
+                )}
+              </button>
+
+              {/* Shopping Cart Button - Shown only on Customer portal */}
+              {currentPortal === 'customer' && (
+                <button
+                  onClick={openCart}
+                  aria-label="View Culinary Cart"
+                  className="relative p-2 rounded-lg border border-[#C7A36A]/30 text-[#F7F3EA] hover:bg-white/10 transition-colors cursor-pointer"
+                  title="View Culinary Cart"
+                >
+                  <ShoppingBag className="w-4 h-4 text-[#C7A36A]" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#C7A36A] text-[#12382D] font-bold text-[10px] flex items-center justify-center animate-in zoom-in-50">
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Excel dataset importer shortcut strictly for authorized staff and front desk in their portals */}
+              {(role === 'staff' || role === 'front_desk') && (currentPortal === 'staff' || currentPortal === 'front_desk') && (
                 <button
                   onClick={() => setShowImporterModal(true)}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-300 transition-colors"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#0D2820] hover:bg-[#081B15] border border-[#C7A36A]/30 rounded-lg text-xs text-[#F7F3EA] transition-colors cursor-pointer"
                   title="Inspect and Import Excel Dataset"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Import Excel</span>
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#C7A36A]" />
+                  <span>Import Dataset</span>
                 </button>
               )}
 
@@ -109,114 +155,151 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setShowRoleMenu(!showRoleMenu)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors text-left"
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#0D2820] border border-[#C7A36A]/40 hover:border-[#C7A36A] transition-colors text-left cursor-pointer"
                     aria-expanded={showRoleMenu}
                   >
-                    <div className="w-7 h-7 rounded-full bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-300 text-xs font-semibold">
+                    <div className="w-7 h-7 rounded-full bg-[#12382D] border border-[#C7A36A] flex items-center justify-center text-[#C7A36A] text-xs font-serif font-bold">
                       {user.full_name?.charAt(0) || 'U'}
                     </div>
                     <div className="hidden lg:block text-xs">
-                      <p className="font-medium text-slate-200 leading-tight truncate max-w-[120px]">
+                      <p className="font-medium text-[#F7F3EA] leading-tight truncate max-w-[120px]">
                         {user.full_name}
                       </p>
-                      <p className="text-[10px] text-cyan-400 uppercase tracking-wider capitalize">
-                        {role.replace('_', ' ')}
+                      <p className="text-[10px] text-[#C7A36A] uppercase tracking-wider font-semibold">
+                        {db.isSuperAdmin(user.email)
+                          ? 'Executive Admin'
+                          : role === 'front_desk'
+                          ? 'Front Desk'
+                          : role === 'staff'
+                          ? 'Staff'
+                          : 'Guest'}
                       </p>
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-3.5 h-3.5 text-[#C7A36A]" />
                   </button>
 
                   {showRoleMenu && (
-                    <div className="absolute right-0 mt-2 w-72 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="px-3 py-2 border-b border-slate-800">
-                        <p className="text-xs text-slate-400">Signed in as</p>
-                        <p className="text-sm font-semibold text-slate-100 truncate">{user.email}</p>
-                        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
-                          <span>Database Role:</span>
-                          <span className="font-semibold text-cyan-300 capitalize">{role.replace('_', ' ')}</span>
+                    <div className="absolute right-0 mt-2 w-80 rounded-xl bg-[#191D19] border border-[#C7A36A]/30 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-[#F7F3EA]">
+                      <div className="px-3 py-2 border-b border-[#C7A36A]/20">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] text-[#A9B8A4]">Signed in as</p>
+                          {db.isSuperAdmin(user.email) && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider font-bold bg-[#C7A36A]/20 text-[#C7A36A] border border-[#C7A36A]/40">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              All Portals
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold text-[#F7F3EA] truncate">{user.email}</p>
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-[#A9B8A4]">
+                          <span>Active Mode:</span>
+                          <span className="font-semibold text-[#C7A36A] capitalize">
+                            {currentPortal === 'front_desk'
+                              ? 'Front Desk Management'
+                              : currentPortal === 'staff'
+                              ? 'Staff Operations'
+                              : 'Guest Sanctuary'}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="py-2">
-                        <p className="px-3 text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-1">
-                          Portal Navigation
-                        </p>
-                        <button
-                          onClick={() => {
-                            onNavigatePortal('customer');
-                            setShowRoleMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                            currentPortal === 'customer'
-                              ? 'bg-slate-800 text-cyan-300 font-medium'
-                              : 'text-slate-300 hover:bg-slate-800/60'
-                          }`}
-                        >
-                          <span>Customer Portal</span>
-                          {currentPortal === 'customer' && <Check className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            onNavigatePortal('staff');
-                            setShowRoleMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                            currentPortal === 'staff'
-                              ? 'bg-slate-800 text-cyan-300 font-medium'
-                              : 'text-slate-300 hover:bg-slate-800/60'
-                          }`}
-                        >
-                          <span>Staff Portal</span>
-                          {currentPortal === 'staff' && <Check className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            onNavigatePortal('front_desk');
-                            setShowRoleMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                            currentPortal === 'front_desk'
-                              ? 'bg-slate-800 text-cyan-300 font-medium'
-                              : 'text-slate-300 hover:bg-slate-800/60'
-                          }`}
-                        >
-                          <span>Front Desk Portal</span>
-                          {currentPortal === 'front_desk' && <Check className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-
-                      {/* Operational Role Switcher (Authorized provisioning testing) */}
-                      <div className="py-2 border-t border-slate-800">
-                        <p className="px-3 text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-1">
-                          Authorized Role Testing
-                        </p>
-                        <div className="grid grid-cols-3 gap-1 px-2">
-                          {(['customer', 'staff', 'front_desk'] as UserRole[]).map((r) => (
+                      {/* Executive Multi-Portal Switcher for Authorized Admin Only */}
+                      {db.isSuperAdmin(user.email) && (
+                        <div className="py-2 border-b border-[#C7A36A]/20">
+                          <p className="px-3 text-[10px] uppercase font-bold tracking-widest text-[#C7A36A] mb-1.5">
+                            Executive Portal Switch
+                          </p>
+                          <div className="space-y-1">
                             <button
-                              key={r}
                               onClick={() => {
-                                switchProvisionedRole(r);
+                                onNavigatePortal('customer');
                                 setShowRoleMenu(false);
                               }}
-                              className={`py-1 px-1.5 text-[11px] rounded transition-colors text-center capitalize ${
-                                role === r
-                                  ? 'bg-cyan-900/60 text-cyan-300 border border-cyan-700/60 font-semibold'
-                                  : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                              className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors cursor-pointer text-left ${
+                                currentPortal === 'customer'
+                                  ? 'bg-[#C7A36A]/20 text-[#F7F3EA] font-semibold'
+                                  : 'text-[#A9B8A4] hover:bg-white/5 hover:text-[#F7F3EA]'
                               }`}
                             >
-                              {r === 'front_desk' ? 'Front Desk' : r}
+                              <span className="flex items-center gap-2">
+                                <Palmtree className="w-3.5 h-3.5 text-[#C7A36A]" />
+                                <span>Guest Sanctuary Portal</span>
+                              </span>
+                              {currentPortal === 'customer' && <span className="text-[10px] text-[#C7A36A]">Active</span>}
                             </button>
-                          ))}
-                        </div>
-                      </div>
 
-                      <div className="pt-2 border-t border-slate-800">
+                            <button
+                              onClick={() => {
+                                onNavigatePortal('staff');
+                                setShowRoleMenu(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors cursor-pointer text-left ${
+                                currentPortal === 'staff'
+                                  ? 'bg-[#C7A36A]/20 text-[#F7F3EA] font-semibold'
+                                  : 'text-[#A9B8A4] hover:bg-white/5 hover:text-[#F7F3EA]'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Briefcase className="w-3.5 h-3.5 text-[#C7A36A]" />
+                                <span>Staff Operations Portal</span>
+                              </span>
+                              {currentPortal === 'staff' && <span className="text-[10px] text-[#C7A36A]">Active</span>}
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                onNavigatePortal('front_desk');
+                                setShowRoleMenu(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-lg transition-colors cursor-pointer text-left ${
+                                currentPortal === 'front_desk'
+                                  ? 'bg-[#C7A36A]/20 text-[#F7F3EA] font-semibold'
+                                  : 'text-[#A9B8A4] hover:bg-white/5 hover:text-[#F7F3EA]'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Building2 className="w-3.5 h-3.5 text-[#C7A36A]" />
+                                <span>Front Desk Management</span>
+                              </span>
+                              {currentPortal === 'front_desk' && <span className="text-[10px] text-[#C7A36A]">Active</span>}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Guest-Specific Menu Items (Profile) */}
+                      {(role === 'customer' || db.isSuperAdmin(user.email)) && currentPortal === 'customer' && (
+                        <div className="py-2 border-b border-[#C7A36A]/20">
+                          <button
+                            onClick={() => {
+                              onTabChange?.('profile');
+                              setShowRoleMenu(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#F7F3EA] hover:bg-white/10 rounded-lg transition-colors cursor-pointer text-left"
+                          >
+                            <User className="w-3.5 h-3.5 text-[#C7A36A]" />
+                            <span>My Sanctuary Profile</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Employee Operational Notice for non-admin staff/frontdesk */}
+                      {!db.isSuperAdmin(user.email) && role !== 'customer' && (
+                        <div className="py-2 border-b border-[#C7A36A]/20 px-3 text-[11px] text-[#A9B8A4]">
+                          <span className="flex items-center gap-1.5 text-[#C7A36A] font-medium">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>Employee Session Verified</span>
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="pt-2">
                         <button
                           onClick={() => {
                             signOut();
                             setShowRoleMenu(false);
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           <span>Sign Out</span>
@@ -226,22 +309,53 @@ export const Navbar: React.FC<NavbarProps> = ({
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-cyan-950 cursor-pointer"
-                >
-                  Sign In / Register
-                </button>
+                /* Unauthenticated Login Buttons Tailored to Portal */
+                currentPortal === 'staff' ? (
+                  <button
+                    onClick={() => setShowStaffAuthModal(true)}
+                    className="px-4 py-2 text-xs font-medium text-white bg-[#12382D] hover:bg-[#0E2C23] border border-[#C7A36A]/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                  >
+                    Staff Sign In
+                  </button>
+                ) : currentPortal === 'front_desk' ? (
+                  <button
+                    onClick={() => setShowFrontDeskAuthModal(true)}
+                    className="px-4 py-2 text-xs font-medium text-white bg-[#12382D] hover:bg-[#0E2C23] border border-[#C7A36A]/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                  >
+                    Front Desk Sign In
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowCustomerAuthModal(true)}
+                    className="px-4 py-2 text-xs font-medium text-[#12382D] bg-[#C7A36A] hover:bg-[#D9BB8A] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                  >
+                    Sign In / Register
+                  </button>
+                )
               )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Auth Modal (Google, Email/Password, Phone OTP with India +91) */}
+      {/* Customer Auth Modal (Guest only) */}
       <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        isOpen={showCustomerAuthModal}
+        onClose={() => setShowCustomerAuthModal(false)}
+      />
+
+      {/* Staff Auth Modal (Staff only) */}
+      <StaffAuthModal
+        isOpen={showStaffAuthModal}
+        onClose={() => setShowStaffAuthModal(false)}
+        onSuccess={() => onNavigatePortal('staff')}
+      />
+
+      {/* Front Desk Auth Modal (Front Desk only) */}
+      <FrontDeskAuthModal
+        isOpen={showFrontDeskAuthModal}
+        onClose={() => setShowFrontDeskAuthModal(false)}
+        onSuccess={() => onNavigatePortal('front_desk')}
       />
 
       {/* Excel Dataset Importer Modal */}
@@ -252,4 +366,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </>
   );
 };
-

@@ -1,13 +1,20 @@
-export type UserRole = 'customer' | 'staff' | 'front_desk';
+export type UserRole = 'customer' | 'staff' | 'front_desk' | 'admin';
 
 export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
   role: UserRole;
+  is_admin?: boolean;
+  authorized_portals?: ('customer' | 'staff' | 'front_desk')[];
   avatar_url?: string;
   phone?: string;
+  age?: number;
+  gender?: 'Male' | 'Female' | 'Prefer not to say' | string;
+  mobile_number?: string;
+  is_profile_complete?: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Customer {
@@ -360,4 +367,169 @@ export interface AIQueryResponse {
   data_freshness: string;
   limitations?: string;
 }
+
+// ============================================================================
+// PHASE 8: FOOD & BEVERAGE, CART & ROOM SERVICE INVENTORY
+// ============================================================================
+
+export type MenuCategory =
+  | 'all'
+  | 'breakfast'
+  | 'starters'
+  | 'indian'
+  | 'continental'
+  | 'mains'
+  | 'desserts'
+  | 'beverages'
+  | 'juices'
+  | 'room_service';
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  category: MenuCategory;
+  description: string;
+  price_inr: number;
+  is_veg: boolean;
+  is_available: boolean;
+  spice_level?: 'mild' | 'medium' | 'spicy';
+  dietary_tags: string[]; // e.g. ['Gluten-Free', 'Chef Special', 'Organic', 'Vegan']
+  image_url: string;
+  preparation_time_minutes: number;
+  calories?: number;
+  featured?: boolean;
+}
+
+export interface CartItem {
+  item: MenuItem;
+  quantity: number;
+  special_notes?: string;
+}
+
+export type FoodOrderType = 'room_service' | 'dine_in' | 'takeaway';
+export type FoodOrderStatus = 'received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+export type FoodPaymentMethod = 'cash' | 'card' | 'room_charge' | 'upi';
+export type FoodPaymentStatus = 'pending' | 'paid' | 'billed_to_room' | 'refunded';
+
+export interface FoodOrderItem {
+  menu_item_id: string;
+  name: string;
+  price_inr: number;
+  quantity: number;
+  is_veg: boolean;
+  subtotal_inr: number;
+  special_notes?: string;
+}
+
+export interface FoodOrder {
+  id: string;
+  order_number: string;
+  user_id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone?: string;
+  order_type: FoodOrderType;
+  delivery_location: string; // e.g. "Suite 301 - Penthouse", "Poolside Cabana #4"
+  room_number?: string;
+  special_instructions?: string;
+  items: FoodOrderItem[];
+  subtotal_inr: number;
+  tax_inr: number; // 5% GST
+  service_charge_inr: number; // 5% Luxury Resort Hospitality fee
+  discount_inr: number;
+  discount_code?: string;
+  total_inr: number;
+  payment_method: FoodPaymentMethod;
+  payment_status: FoodPaymentStatus;
+  status: FoodOrderStatus;
+  created_at: string;
+  estimated_delivery_time?: string;
+  notes?: string;
+}
+
+// ============================================================================
+// SUPABASE REAL DATABASE INTEGRATION TYPES
+// ============================================================================
+
+export interface NivoraProfileRow {
+  id: string; // references auth.users(id)
+  full_name?: string;
+  phone?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface SupabaseUserRow {
+  guest_id: number; // bigint in legacy dataset
+  guest_name: string;
+  email: string;
+  city?: string;
+  age?: number;
+  gender?: string;
+  guest_segment?: string;
+  loyalty_level?: string;
+}
+
+export interface SupabaseRoomRow {
+  room_id: string;
+  room_type: string;
+  room_status?: string;
+}
+
+export interface SupabaseReservationRow {
+  id: string; // uuid
+  guest_id: string; // uuid referencing auth.users(id)
+  room_id?: string; // uuid
+  check_in: string; // date YYYY-MM-DD
+  check_out: string; // date YYYY-MM-DD
+  booking_status?: string;
+  created_at: string;
+}
+
+export interface SupabaseFeedbackRow {
+  id: string; // uuid
+  guest_id?: string; // uuid
+  reservation_id?: string; // uuid
+  rating: number;
+  comments?: string;
+  created_at: string;
+}
+
+export interface SupabaseTableHealth {
+  tableName: 'user' | 'rooms' | 'reservations' | 'feedback' | 'nivora_profiles' | 'nivora' | 'nivora_dataset';
+  status: 'connected' | 'error';
+  httpStatus: number;
+  rowCount: number;
+  columnsCount: number;
+  columns: string[];
+  rlsActive: boolean;
+  canRead: boolean;
+  errorMessage?: string | null;
+  lastCheckedAt: string;
+}
+
+export interface NivoraDatasetQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  roomType?: string;
+  bookingChannel?: string;
+  guestSegment?: string;
+  transactionStatus?: string;
+  sortBy?: string;
+  sortAscending?: boolean;
+}
+
+export interface NivoraDatasetQueryResult {
+  records: NivoraDatasetRecord[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  isLiveSupabase: boolean;
+  rlsRestricted: boolean;
+  errorMessage?: string | null;
+  fetchedAt: string;
+}
+
 

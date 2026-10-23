@@ -583,6 +583,22 @@ class DatasetService {
       data_freshness_timestamp: new Date().toISOString(),
     };
   }
+
+  /**
+   * Real Supabase query for public.nivora_dataset with search, filtering, and pagination.
+   */
+  public async querySupabase(params: import('./types').NivoraDatasetQueryParams = {}): Promise<import('./types').NivoraDatasetQueryResult> {
+    const { queryNivoraDataset } = await import('./supabase');
+    const result = await queryNivoraDataset(params);
+
+    // If live records are returned, also update local in-memory dataset
+    if (result.records.length > 0) {
+      this.records = [...result.records];
+      this.save();
+    }
+
+    return result;
+  }
 }
 
 export const datasetService = new DatasetService();

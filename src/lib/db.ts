@@ -11,14 +11,13 @@ import {
   NotificationItem,
   UserRole,
   UserProfile,
+  MenuItem,
+  FoodOrder,
+  FoodOrderStatus,
+  FoodPaymentStatus,
 } from './types';
 import { supabase, isSupabaseConfigured } from './supabase';
-
-const heroImg = '/src/assets/images/nivora_hero_resort_1791530362412.jpg';
-const presSuiteImg = '/src/assets/images/room_presidential_suite_1791530372409.jpg';
-const deluxeOceanImg = '/src/assets/images/room_deluxe_ocean_1791530384315.jpg';
-const execVillaImg = '/src/assets/images/room_executive_villa_1791530394520.jpg';
-const spaWellnessImg = '/src/assets/images/resort_spa_wellness_1791530404463.jpg';
+import { RESORT_IMAGES, resolveImageUrl } from './assets';
 
 export const INITIAL_ROOM_TYPES: RoomType[] = [
   {
@@ -31,7 +30,7 @@ export const INITIAL_ROOM_TYPES: RoomType[] = [
     bed_type: 'King Master + Queen Guest',
     size_sqm: 140,
     amenities: ['Panoramic Ocean View', 'Private Jacuzzi Terrace', 'Personal Butler', 'Bang & Olufsen Sound', 'Marble Spa Bath', 'Bvlgari Toiletries'],
-    image_url: presSuiteImg,
+    image_url: RESORT_IMAGES.presidentialSuite,
   },
   {
     id: 'rt_deluxe_ocean',
@@ -43,7 +42,7 @@ export const INITIAL_ROOM_TYPES: RoomType[] = [
     bed_type: 'King Bed',
     size_sqm: 65,
     amenities: ['Oceanfront Balcony', 'Walk-in Rain Shower', 'Espresso Machine', 'Pillow Menu', 'Smart Climate Control', 'High-speed Wi-Fi'],
-    image_url: deluxeOceanImg,
+    image_url: RESORT_IMAGES.deluxeOcean,
   },
   {
     id: 'rt_executive_villa',
@@ -55,7 +54,7 @@ export const INITIAL_ROOM_TYPES: RoomType[] = [
     bed_type: 'King Bed + Daybed',
     size_sqm: 95,
     amenities: ['Private Plunge Pool', 'Tropical Garden Courtyard', 'Outdoor Daybed', 'Mini Wine Cellar', 'Complimentary Breakfast', 'Evening Turndown'],
-    image_url: execVillaImg,
+    image_url: RESORT_IMAGES.executiveVilla,
   },
   {
     id: 'rt_wellness_pavilion',
@@ -67,7 +66,7 @@ export const INITIAL_ROOM_TYPES: RoomType[] = [
     bed_type: 'King Bed',
     size_sqm: 80,
     amenities: ['Private Reflection Bath', 'Direct Spa Access', 'Aromatherapy Diffuser', 'Yoga & Meditation Mat', 'Organic Herb Bar', 'Sound Therapy System'],
-    image_url: spaWellnessImg,
+    image_url: RESORT_IMAGES.spaWellness,
   },
 ];
 
@@ -282,18 +281,423 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   },
 ];
 
+export const INITIAL_MENU_ITEMS: MenuItem[] = [
+  // 1. Breakfast
+  {
+    id: 'item_bf_1',
+    name: 'Artisan Balcony Continental Breakfast',
+    category: 'breakfast',
+    description: 'Freshly baked sourdough croissants, pain au chocolat, organic farm eggs with hollandaise, dragonfruit, seasonal berries, artisanal French butter, and espresso.',
+    price_inr: 1450,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Chef Signature', 'Organic', 'Fresh Daily'],
+    image_url: RESORT_IMAGES.breakfast,
+    preparation_time_minutes: 20,
+    calories: 580,
+    featured: true,
+  },
+  {
+    id: 'item_bf_2',
+    name: 'Avocado Tartine with Poached Eggs & Microgreens',
+    category: 'breakfast',
+    description: 'Crushed Hass avocado on toasted brioche, heirloom cherry tomatoes, cold-pressed olive oil, organic poached eggs, and garden microgreens.',
+    price_inr: 850,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Healthy Choice', 'Organic'],
+    image_url: RESORT_IMAGES.breakfast,
+    preparation_time_minutes: 15,
+    calories: 420,
+  },
+  {
+    id: 'item_bf_3',
+    name: 'Superfood Tropical Chia Bowl',
+    category: 'breakfast',
+    description: 'Almond milk chia pudding, Alphonso mango purée, toasted coconut flakes, roasted pumpkin seeds, and wild forest honey.',
+    price_inr: 650,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Vegan', 'Gluten-Free', 'Superfood'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 10,
+    calories: 340,
+  },
+
+  // 2. Starters
+  {
+    id: 'item_st_1',
+    name: 'Charred Malabar Tandoori Paneer Tikka',
+    category: 'starters',
+    description: 'Artisanal organic cottage cheese marinated in Kashmiri saffron and ground spices, charred with sweet bell peppers, served with mint coriander chutney and pickled shallots.',
+    price_inr: 850,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'medium',
+    dietary_tags: ['Vegetarian', 'Gluten-Free', 'Chef Special'],
+    image_url: RESORT_IMAGES.tandooriPaneer,
+    preparation_time_minutes: 25,
+    calories: 480,
+    featured: true,
+  },
+  {
+    id: 'item_st_2',
+    name: 'Crispy Island Calamari & Rock Shrimp',
+    category: 'starters',
+    description: 'Tempura crisp island seafood dusted with kaffir lime zest, served with roasted garlic chili emulsion and charred lime.',
+    price_inr: 1150,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'medium',
+    dietary_tags: ['Seafood', 'Signature'],
+    image_url: RESORT_IMAGES.seaBass,
+    preparation_time_minutes: 20,
+    calories: 510,
+  },
+
+  // 3. Indian Cuisine
+  {
+    id: 'item_ind_1',
+    name: 'Dum Awadhi Saffron Mutton Biryani',
+    category: 'indian',
+    description: 'Slow-cooked tender lamb infused with saffron, mace, and rosewater, layered with aged basmati, garnished with crisp caramelized onions, roasted cashews, edible gold leaf, and cucumber raita.',
+    price_inr: 1650,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'medium',
+    dietary_tags: ['Royal Feast', 'Chef Special', 'Gold Leaf'],
+    image_url: RESORT_IMAGES.biryani,
+    preparation_time_minutes: 35,
+    calories: 780,
+    featured: true,
+  },
+  {
+    id: 'item_ind_2',
+    name: 'Dal Nivora 36-Hour Slow-Simmered',
+    category: 'indian',
+    description: 'Slow-simmered black lentils cooked overnight on clay tandoor embers with organic churned butter, fresh cream, and smoked fenugreek.',
+    price_inr: 750,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Vegetarian', 'Iconic', 'Comfort Classic'],
+    image_url: RESORT_IMAGES.tandooriPaneer,
+    preparation_time_minutes: 15,
+    calories: 460,
+  },
+  {
+    id: 'item_ind_3',
+    name: 'Royal Murgh Makhani Velvet Butter Chicken',
+    category: 'indian',
+    description: 'Tandoor charred chicken simmered in a velvety San Marzano tomato satin gravy with hand-churned white butter and dried fenugreek.',
+    price_inr: 1350,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Gluten-Free', 'Classic'],
+    image_url: RESORT_IMAGES.biryani,
+    preparation_time_minutes: 25,
+    calories: 650,
+  },
+
+  // 4. Continental
+  {
+    id: 'item_con_1',
+    name: 'Pan-Seared Chilean Sea Bass with Saffron Risotto',
+    category: 'continental',
+    description: 'Wild caught sea bass with crispy golden skin, served over creamy saffron arborio risotto, grilled tender asparagus spears, microgreens, and lemon herb beurre blanc.',
+    price_inr: 2450,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Signature', 'Gluten-Free', 'Wild Caught'],
+    image_url: RESORT_IMAGES.seaBass,
+    preparation_time_minutes: 30,
+    calories: 620,
+    featured: true,
+  },
+  {
+    id: 'item_con_2',
+    name: 'Handcrafted Wild Truffle Mushroom Fettuccine',
+    category: 'continental',
+    description: 'Fresh egg pasta tossed with porcini and morel mushrooms, black summer truffle cream, toasted pine nuts, and 24-month aged Parmigiano Reggiano.',
+    price_inr: 1250,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Vegetarian', 'Artisan Pasta'],
+    image_url: RESORT_IMAGES.seaBass,
+    preparation_time_minutes: 20,
+    calories: 590,
+  },
+
+  // 5. Main Course
+  {
+    id: 'item_mn_1',
+    name: 'Grilled Herb-Crusted Australian Lamb Chops',
+    category: 'mains',
+    description: 'Rosemary and garlic crusted tender lamb cutlets, mint sweet pea purée, glazed heritage baby carrots, and rich Pinot Noir reduction.',
+    price_inr: 2850,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Premium Cut', 'Chef Special'],
+    image_url: RESORT_IMAGES.seaBass,
+    preparation_time_minutes: 30,
+    calories: 720,
+  },
+  {
+    id: 'item_mn_2',
+    name: 'Coastal Malabar Coconut King Prawn Curry',
+    category: 'mains',
+    description: 'Jumbo king prawns simmered in stone-ground coconut milk, Kokum, curry leaves, and mustard seeds, served with steamed jasmine rice.',
+    price_inr: 1750,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'medium',
+    dietary_tags: ['Seafood', 'Gluten-Free', 'Local Catch'],
+    image_url: RESORT_IMAGES.biryani,
+    preparation_time_minutes: 25,
+    calories: 580,
+  },
+
+  // 6. Desserts
+  {
+    id: 'item_des_1',
+    name: 'Valrhona Warm Chocolate Fondant Sphere',
+    category: 'desserts',
+    description: 'Valrhona 70% dark chocolate dome with liquid chocolate center, cocoa crumble, raspberry coulis swirl, edible flowers, 24k gold leaf, and Tahitian vanilla bean gelato.',
+    price_inr: 850,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Vegetarian', '24k Gold', 'Signature Dessert'],
+    image_url: RESORT_IMAGES.dessert,
+    preparation_time_minutes: 20,
+    calories: 510,
+    featured: true,
+  },
+  {
+    id: 'item_des_2',
+    name: 'Royal Kesari Rasmalai Tres Leches',
+    category: 'desserts',
+    description: 'Saffron and cardamom infused sponge steeped in three rich milks, topped with artisanal chenna dumplings, slivered pistachios, and Persian rose petals.',
+    price_inr: 650,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Vegetarian', 'Royal Heritage'],
+    image_url: RESORT_IMAGES.dessert,
+    preparation_time_minutes: 15,
+    calories: 420,
+  },
+
+  // 7. Beverages
+  {
+    id: 'item_bev_1',
+    name: 'Royal Darjeeling First Flush Vintage Tea',
+    category: 'beverages',
+    description: 'Single-estate high mountain tea with delicate muscatel notes, served with raw wild forest honey, organic lemon slices, and artisanal shortbread.',
+    price_inr: 450,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Organic', 'Single Estate'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 8,
+    calories: 40,
+  },
+  {
+    id: 'item_bev_2',
+    name: 'Smoked Rosemary Botanical Infusion',
+    category: 'beverages',
+    description: 'Craft tonic with charred garden rosemary, white elderflower, dehydrated blood orange, and sparkling mineral water.',
+    price_inr: 520,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Signature Mocktail', 'Zero Alcohol'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 10,
+    calories: 95,
+  },
+
+  // 8. Fresh Juices
+  {
+    id: 'item_juc_1',
+    name: 'Nivora Sunrise Tropical Elixir',
+    category: 'juices',
+    description: 'Freshly squeezed Valencia oranges, golden passion fruit, organic ginger root, and mint leaves served over crushed crystal ice.',
+    price_inr: 480,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Cold-Pressed', 'Immunity Boost', '100% Raw'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 8,
+    calories: 120,
+    featured: true,
+  },
+  {
+    id: 'item_juc_2',
+    name: 'Emerald Island Sanctuary Detox',
+    category: 'juices',
+    description: 'Cold-pressed English cucumber, organic celery, green Granny Smith apple, baby spinach, mint, and Tahitian lime.',
+    price_inr: 480,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Detox', 'Cold-Pressed', 'No Added Sugar'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 8,
+    calories: 95,
+  },
+  {
+    id: 'item_juc_3',
+    name: 'Fresh Chilled Tender King Coconut',
+    category: 'juices',
+    description: 'Plucked fresh daily from the resort’s organic palm groves, chilled, and served in-shell with fragrant lemongrass straw.',
+    price_inr: 350,
+    is_veg: true,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Electrolyte Rich', '100% Natural'],
+    image_url: RESORT_IMAGES.juices,
+    preparation_time_minutes: 5,
+    calories: 60,
+  },
+
+  // 9. Room Service
+  {
+    id: 'item_rs_1',
+    name: 'The Sanctuary Balcony Breakfast Set for Two',
+    category: 'room_service',
+    description: 'In-room dining luxury spread delivered under silver cloches: warm basket of croissants, pain au chocolat, sourdough with jams, choice of organic eggs Florentine or Royale, tropical fruit platter with dragonfruit, two fresh squeezed juices, and artisanal French press coffee.',
+    price_inr: 2800,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Bespoke Dining', 'Silver Cloche Service', 'Serves 2'],
+    image_url: RESORT_IMAGES.roomService,
+    preparation_time_minutes: 30,
+    calories: 1100,
+    featured: true,
+  },
+  {
+    id: 'item_rs_2',
+    name: 'Midnight Sanctuary Gourmet Tasting Platter',
+    category: 'room_service',
+    description: 'Available 24 hours: artisanal imported cheese board, truffle fries with smoked garlic aioli, mini gourmet wagyu or paneer sliders, and chocolate truffles.',
+    price_inr: 1950,
+    is_veg: false,
+    is_available: true,
+    spice_level: 'mild',
+    dietary_tags: ['Available 24/7', 'Late Night'],
+    image_url: RESORT_IMAGES.roomService,
+    preparation_time_minutes: 25,
+    calories: 840,
+  },
+];
+
+export const INITIAL_FOOD_ORDERS: FoodOrder[] = [
+  {
+    id: 'ord_001',
+    order_number: 'NIV-FB-1002',
+    user_id: 'usr_guest_arrived',
+    guest_name: 'Marcus Vance',
+    guest_email: 'marcus.vance@example.com',
+    guest_phone: '+1 (555) 392-1840',
+    order_type: 'room_service',
+    delivery_location: 'Room 204 - Deluxe Oceanfront',
+    room_number: '204',
+    special_instructions: 'Please deliver around 1:30 PM. Extra mint raita with the biryani.',
+    items: [
+      {
+        menu_item_id: 'item_ind_1',
+        name: 'Dum Awadhi Saffron Mutton Biryani',
+        price_inr: 1650,
+        quantity: 1,
+        is_veg: false,
+        subtotal_inr: 1650,
+      },
+      {
+        menu_item_id: 'item_juc_1',
+        name: 'Nivora Sunrise Tropical Elixir',
+        price_inr: 480,
+        quantity: 1,
+        is_veg: true,
+        subtotal_inr: 480,
+      },
+    ],
+    subtotal_inr: 2130,
+    tax_inr: 107,
+    service_charge_inr: 107,
+    discount_inr: 0,
+    total_inr: 2344,
+    payment_method: 'room_charge',
+    payment_status: 'billed_to_room',
+    status: 'preparing',
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    estimated_delivery_time: '25 mins',
+  },
+  {
+    id: 'ord_002',
+    order_number: 'NIV-FB-1001',
+    user_id: 'usr_guest_spa',
+    guest_name: 'Elena Rostova',
+    guest_email: 'elena.rostova@example.com',
+    guest_phone: '+44 20 7946 0912',
+    order_type: 'room_service',
+    delivery_location: 'Room 103 - Royal Spa Pavilion',
+    room_number: '103',
+    special_instructions: 'Leave on balcony table, do not knock loudly.',
+    items: [
+      {
+        menu_item_id: 'item_juc_2',
+        name: 'Emerald Island Sanctuary Detox',
+        price_inr: 480,
+        quantity: 1,
+        is_veg: true,
+        subtotal_inr: 480,
+      },
+      {
+        menu_item_id: 'item_rs_1',
+        name: 'The Sanctuary Balcony Breakfast Set for Two',
+        price_inr: 2800,
+        quantity: 1,
+        is_veg: false,
+        subtotal_inr: 2800,
+      },
+    ],
+    subtotal_inr: 3280,
+    tax_inr: 164,
+    service_charge_inr: 164,
+    discount_inr: 0,
+    total_inr: 3608,
+    payment_method: 'card',
+    payment_status: 'paid',
+    status: 'delivered',
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+  },
+];
+
 // Local storage persistent keys
 const STORAGE_KEYS = {
-  ROOM_TYPES: 'nivora_room_types_v1',
-  ROOMS: 'nivora_rooms_v1',
-  RESERVATIONS: 'nivora_reservations_v1',
-  ACTIVE_STAYS: 'nivora_active_stays_v1',
-  HOUSEKEEPING: 'nivora_housekeeping_v1',
-  MAINTENANCE: 'nivora_maintenance_v1',
-  SERVICE_REQUESTS: 'nivora_service_requests_v1',
-  PAYMENTS: 'nivora_payments_v1',
-  AUDIT_LOGS: 'nivora_audit_logs_v1',
-  USER_ROLES: 'nivora_user_roles_v1',
+  ROOM_TYPES: 'nivora_room_types_v4',
+  ROOMS: 'nivora_rooms_v4',
+  RESERVATIONS: 'nivora_reservations_v4',
+  ACTIVE_STAYS: 'nivora_active_stays_v4',
+  HOUSEKEEPING: 'nivora_housekeeping_v4',
+  MAINTENANCE: 'nivora_maintenance_v4',
+  SERVICE_REQUESTS: 'nivora_service_requests_v4',
+  PAYMENTS: 'nivora_payments_v4',
+  AUDIT_LOGS: 'nivora_audit_logs_v4',
+  USER_ROLES: 'nivora_user_roles_v4',
+  MENU_ITEMS: 'nivora_menu_items_v4',
+  FOOD_ORDERS: 'nivora_food_orders_v4',
 };
 
 function loadStorage<T>(key: string, defaultValue: T): T {
@@ -318,9 +722,19 @@ function saveStorage<T>(key: string, val: T): void {
   }
 }
 
+// Primary authorized owner/admin email with multi-portal access to Customer, Staff, and Front Desk
+export const AUTHORIZED_ADMIN_EMAIL = 'dhiru636441@gmail.com';
+export const AUTHORIZED_ADMIN_EMAILS = [AUTHORIZED_ADMIN_EMAIL.toLowerCase()];
+
 // In-Memory & LocalStorage backed DB engine
 class HotelDatabase {
-  private roomTypes: RoomType[] = loadStorage(STORAGE_KEYS.ROOM_TYPES, INITIAL_ROOM_TYPES);
+  private roomTypes: RoomType[] = loadStorage(STORAGE_KEYS.ROOM_TYPES, INITIAL_ROOM_TYPES).map((rt) => {
+    const initial = INITIAL_ROOM_TYPES.find((i) => i.id === rt.id);
+    return {
+      ...rt,
+      image_url: initial ? initial.image_url : resolveImageUrl(rt.image_url),
+    };
+  });
   private rooms: Room[] = loadStorage(STORAGE_KEYS.ROOMS, INITIAL_ROOMS);
   private reservations: Reservation[] = loadStorage(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS);
   private activeStays: ActiveStay[] = loadStorage(STORAGE_KEYS.ACTIVE_STAYS, INITIAL_ACTIVE_STAYS);
@@ -329,10 +743,20 @@ class HotelDatabase {
   private serviceRequests: ServiceRequest[] = loadStorage(STORAGE_KEYS.SERVICE_REQUESTS, INITIAL_SERVICE_REQUESTS);
   private payments: PaymentRecord[] = loadStorage(STORAGE_KEYS.PAYMENTS, []);
   private auditLogs: AuditLog[] = loadStorage(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
+  private menuItems: MenuItem[] = loadStorage(STORAGE_KEYS.MENU_ITEMS, INITIAL_MENU_ITEMS).map((mi) => {
+    const initial = INITIAL_MENU_ITEMS.find((i) => i.id === mi.id);
+    return {
+      ...mi,
+      image_url: initial ? initial.image_url : resolveImageUrl(mi.image_url),
+    };
+  });
+  private foodOrders: FoodOrder[] = loadStorage(STORAGE_KEYS.FOOD_ORDERS, INITIAL_FOOD_ORDERS);
+
   private userRoles: Record<string, UserRole> = loadStorage(STORAGE_KEYS.USER_ROLES, {
     'usr_customer_demo': 'customer',
     'staff@nivoraresort.com': 'staff',
     'frontdesk@nivoraresort.com': 'front_desk',
+    [AUTHORIZED_ADMIN_EMAIL.toLowerCase()]: 'admin',
   });
 
   private notifyListeners: Array<() => void> = [];
@@ -348,17 +772,47 @@ class HotelDatabase {
     this.notifyListeners.forEach(listener => listener());
   }
 
-  // --- ROLE MANAGEMENT ---
+  // --- ROLE MANAGEMENT & SECURE PORTAL AUTHORIZATION ---
+  public isSuperAdmin(userIdOrEmail?: string | null): boolean {
+    if (!userIdOrEmail) return false;
+    const clean = userIdOrEmail.toLowerCase().trim();
+    return AUTHORIZED_ADMIN_EMAILS.includes(clean);
+  }
+
   public getUserRole(userIdOrEmail: string): UserRole {
-    // Role lookup from database records
-    const role = this.userRoles[userIdOrEmail];
+    if (!userIdOrEmail) return 'customer';
+    const clean = userIdOrEmail.toLowerCase().trim();
+    if (this.isSuperAdmin(clean)) return 'admin';
+    const role = this.userRoles[clean] || this.userRoles[userIdOrEmail];
     if (role) return role;
     // By security default: Any unprovisioned user is strictly 'customer'
     return 'customer';
   }
 
+  public canEmailAccessPortal(userIdOrEmail: string, portal: 'customer' | 'staff' | 'front_desk'): boolean {
+    if (!userIdOrEmail) return false;
+    const clean = userIdOrEmail.toLowerCase().trim();
+    // Authorized admin email has permission to access all three portals
+    if (this.isSuperAdmin(clean)) return true;
+    const assignedRole = this.getUserRole(clean);
+    return assignedRole === portal;
+  }
+
+  public getAuthorizedPortals(userIdOrEmail: string): Array<'customer' | 'staff' | 'front_desk'> {
+    if (!userIdOrEmail) return ['customer'];
+    const clean = userIdOrEmail.toLowerCase().trim();
+    if (this.isSuperAdmin(clean)) {
+      return ['customer', 'staff', 'front_desk'];
+    }
+    const role = this.getUserRole(clean);
+    if (role === 'staff') return ['staff'];
+    if (role === 'front_desk') return ['front_desk'];
+    return ['customer'];
+  }
+
   public setUserRole(userIdOrEmail: string, role: UserRole) {
-    this.userRoles[userIdOrEmail] = role;
+    const clean = userIdOrEmail.toLowerCase().trim();
+    this.userRoles[clean] = role;
     saveStorage(STORAGE_KEYS.USER_ROLES, this.userRoles);
     this.emitChange();
   }
@@ -830,6 +1284,43 @@ class HotelDatabase {
     return item;
   }
 
+  public createTicketFromAI(params: {
+    ticketId: string;
+    userId: string;
+    guestName: string;
+    roomNumber?: string;
+    category: ServiceRequest['category'];
+    title: string;
+    details: string;
+    priority: ServiceRequest['priority'];
+  }): ServiceRequest {
+    const item: ServiceRequest = {
+      id: params.ticketId,
+      user_id: params.userId,
+      room_number: params.roomNumber || '101',
+      category: params.category,
+      title: `[Nia AI] ${params.title}`,
+      details: params.details,
+      priority: params.priority,
+      status: 'pending',
+      assigned_to_name: params.category === 'maintenance' ? 'Duty Engineering Lead' : params.category === 'housekeeping' ? 'Floor Housekeeper' : 'Lead Guest Concierge',
+      created_at: new Date().toISOString(),
+    };
+    this.serviceRequests.unshift(item);
+    saveStorage(STORAGE_KEYS.SERVICE_REQUESTS, this.serviceRequests);
+
+    this.logAudit(
+      { id: params.userId, email: 'guest', role: 'customer' },
+      'NIA_AI_DISPATCH_TICKET',
+      'service_request',
+      item.id,
+      { title: item.title, priority: item.priority, category: item.category }
+    );
+
+    this.emitChange();
+    return item;
+  }
+
   public updateServiceRequestStatus(id: string, status: ServiceRequest['status'], notes?: string, actor?: { id: string; email: string; role: string }) {
     const item = this.serviceRequests.find(s => s.id === id);
     if (!item) throw new Error('Service request not found');
@@ -846,6 +1337,156 @@ class HotelDatabase {
     }
     this.emitChange();
     return item;
+  }
+
+  // --- FOOD & BEVERAGE AND IN-ROOM DINING METHODS ---
+  public getMenuItems(): MenuItem[] {
+    return [...this.menuItems];
+  }
+
+  public getMenuItemById(id: string): MenuItem | undefined {
+    return this.menuItems.find((m) => m.id === id);
+  }
+
+  public updateMenuItem(
+    updated: MenuItem,
+    actor?: { id: string; email: string; role: string }
+  ): MenuItem {
+    const idx = this.menuItems.findIndex((m) => m.id === updated.id);
+    if (idx !== -1) {
+      this.menuItems[idx] = { ...updated, image_url: resolveImageUrl(updated.image_url) };
+    } else {
+      this.menuItems.push({ ...updated, image_url: resolveImageUrl(updated.image_url) });
+    }
+    saveStorage(STORAGE_KEYS.MENU_ITEMS, this.menuItems);
+    if (actor) {
+      this.logAudit(actor, 'UPDATE_MENU_ITEM', 'menu_item', updated.id, {
+        name: updated.name,
+        is_available: updated.is_available,
+        price_inr: updated.price_inr,
+      });
+    }
+    this.emitChange();
+    return this.menuItems[idx !== -1 ? idx : this.menuItems.length - 1];
+  }
+
+  public addMenuItem(
+    itemData: Omit<MenuItem, 'id'>,
+    actor?: { id: string; email: string; role: string }
+  ): MenuItem {
+    const newItem: MenuItem = {
+      ...itemData,
+      id: `item_custom_${Date.now()}`,
+      image_url: resolveImageUrl(itemData.image_url),
+    };
+    this.menuItems.unshift(newItem);
+    saveStorage(STORAGE_KEYS.MENU_ITEMS, this.menuItems);
+    if (actor) {
+      this.logAudit(actor, 'ADD_MENU_ITEM', 'menu_item', newItem.id, { name: newItem.name });
+    }
+    this.emitChange();
+    return newItem;
+  }
+
+  public deleteMenuItem(
+    id: string,
+    actor?: { id: string; email: string; role: string }
+  ): boolean {
+    const initialLen = this.menuItems.length;
+    this.menuItems = this.menuItems.filter((m) => m.id !== id);
+    if (this.menuItems.length !== initialLen) {
+      saveStorage(STORAGE_KEYS.MENU_ITEMS, this.menuItems);
+      if (actor) {
+        this.logAudit(actor, 'DELETE_MENU_ITEM', 'menu_item', id);
+      }
+      this.emitChange();
+      return true;
+    }
+    return false;
+  }
+
+  public getFoodOrders(): FoodOrder[] {
+    return [...this.foodOrders];
+  }
+
+  public getFoodOrdersByUser(userId: string): FoodOrder[] {
+    return this.foodOrders.filter((o) => o.user_id === userId);
+  }
+
+  public createFoodOrder(
+    orderData: Omit<FoodOrder, 'id' | 'order_number' | 'created_at'>,
+    actor?: { id: string; email: string; role: string }
+  ): FoodOrder {
+    const orderNum = `NIV-FB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newOrder: FoodOrder = {
+      ...orderData,
+      id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      order_number: orderNum,
+      created_at: new Date().toISOString(),
+    };
+
+    this.foodOrders.unshift(newOrder);
+    saveStorage(STORAGE_KEYS.FOOD_ORDERS, this.foodOrders);
+
+    // Also auto-generate a ServiceRequest for Staff operations if it is room service
+    if (newOrder.order_type === 'room_service') {
+      const roomNum = newOrder.room_number || newOrder.delivery_location.replace(/[^0-9]/g, '') || '101';
+      this.serviceRequests.unshift({
+        id: `srv_fb_${Date.now()}`,
+        user_id: newOrder.user_id,
+        room_number: roomNum,
+        category: 'room_service',
+        title: `In-Room Dining: ${newOrder.order_number}`,
+        details: `${newOrder.items.map((i) => `${i.quantity}x ${i.name}`).join(', ')}. Total: ₹${newOrder.total_inr.toLocaleString()}. ${newOrder.special_instructions || ''}`,
+        priority: 'high',
+        status: 'pending',
+        assigned_to_name: 'Culinary In-Room Dining Team',
+        created_at: newOrder.created_at,
+      });
+      saveStorage(STORAGE_KEYS.SERVICE_REQUESTS, this.serviceRequests);
+    }
+
+    if (actor) {
+      this.logAudit(actor, 'CREATE_FOOD_ORDER', 'food_order', newOrder.id, {
+        order_number: newOrder.order_number,
+        total_inr: newOrder.total_inr,
+        payment_method: newOrder.payment_method,
+      });
+    }
+
+    this.emitChange();
+    return newOrder;
+  }
+
+  public updateFoodOrderStatus(
+    orderId: string,
+    status: FoodOrderStatus,
+    paymentStatus?: FoodPaymentStatus,
+    notes?: string,
+    actor?: { id: string; email: string; role: string }
+  ): FoodOrder | undefined {
+    const order = this.foodOrders.find((o) => o.id === orderId);
+    if (!order) return undefined;
+
+    order.status = status;
+    if (paymentStatus) {
+      order.payment_status = paymentStatus;
+    }
+    if (notes) {
+      order.notes = notes;
+    }
+
+    saveStorage(STORAGE_KEYS.FOOD_ORDERS, this.foodOrders);
+
+    if (actor) {
+      this.logAudit(actor, 'UPDATE_FOOD_ORDER_STATUS', 'food_order', orderId, {
+        status,
+        payment_status: order.payment_status,
+      });
+    }
+
+    this.emitChange();
+    return order;
   }
 
   // --- STATS FOR FRONT DESK ---
@@ -866,6 +1507,7 @@ class HotelDatabase {
     const pendingReservations = this.reservations.filter(r => r.status === 'pending' || r.status === 'confirmed').length;
     const openServiceRequests = this.serviceRequests.filter(s => s.status === 'pending' || s.status === 'in_progress').length;
     const pendingHousekeeping = this.housekeepingTasks.filter(h => h.status === 'pending' || h.status === 'in_progress').length;
+    const activeFoodOrders = this.foodOrders.filter(o => o.status === 'received' || o.status === 'preparing' || o.status === 'out_for_delivery').length;
 
     const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
@@ -880,6 +1522,7 @@ class HotelDatabase {
       pendingReservations,
       openServiceRequests,
       pendingHousekeeping,
+      activeFoodOrders,
       occupancyRate,
     };
   }
