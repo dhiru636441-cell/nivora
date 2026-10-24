@@ -6,7 +6,6 @@ import { RoomType, Reservation, ActiveStay, ServiceRequest } from '../../lib/typ
 import { BookRoomModal } from './BookRoomModal';
 import { HotelAIAssistant } from '../../components/ai/HotelAIAssistant';
 import { NiaAssistant } from '../../components/ai/NiaAssistant';
-import { NiaFloatingButton } from '../../components/ai/NiaFloatingButton';
 import { FoodAndBeveragePage } from './FoodAndBeveragePage';
 import { RESORT_IMAGES } from '../../lib/assets';
 import { ImageWithFallback } from '../../components/common/ImageWithFallback';
@@ -890,11 +889,6 @@ export const CustomerPortal: React.FC = () => {
           }}
         />
       )}
-
-      {/* Floating Nia AI Concierge Launcher */}
-      <NiaFloatingButton
-        onSelectRoomForBooking={(rt) => setSelectedRoomType(rt)}
-      />
 
     </div>
   );

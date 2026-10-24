@@ -17,6 +17,7 @@ import { AuthCallback } from './pages/AuthCallback';
 import { AuthModal } from './components/auth/AuthModal';
 import { StaffAuthModal } from './components/auth/StaffAuthModal';
 import { FrontDeskAuthModal } from './components/auth/FrontDeskAuthModal';
+import { NiaFloatingButton } from './components/ai/NiaFloatingButton';
 import { Loader2 } from 'lucide-react';
 
 type PortalType = 'customer' | 'staff' | 'front_desk';
@@ -223,6 +224,9 @@ function MainRouter() {
           </footer>
         </>
       )}
+
+      {/* Floating Action Button for Nia AI - Persistent across all customer-facing views */}
+      {currentPortal === 'customer' && <NiaFloatingButton />}
     </div>
   );
 }
